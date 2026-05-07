@@ -15,6 +15,17 @@ if (!USER || !PASS) {
     process.exit(1);
 }
 
+const PUBLIC_PATHS = new Set(['/LogoMatix.jpeg', '/favicon.ico']);
+
+app.use((req, res, next) => {
+    if (req.method === 'GET' && !PUBLIC_PATHS.has(req.path)) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+    }
+    next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(session({
@@ -28,8 +39,6 @@ app.use(session({
         maxAge: 1000 * 60 * 60 * 8
     }
 }));
-
-const PUBLIC_PATHS = new Set(['/LogoMatix.jpeg', '/favicon.ico']);
 
 app.get('/login', (req, res) => {
     if (req.session.authed) return res.redirect('/');

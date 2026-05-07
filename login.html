@@ -375,7 +375,8 @@
 
                 if (res.ok) {
                     const params = new URLSearchParams(window.location.search);
-                    window.location.href = params.get('next') || '/';
+                    const target = params.get('next') || '/';
+                    window.location.replace(target);
                     return;
                 }
 
