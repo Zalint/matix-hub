@@ -1,13 +1,14 @@
 {
   "name": "matix-hub",
   "version": "1.0.0",
-  "description": "Matix hub static page with basic auth",
+  "description": "Matix hub static page with custom login",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "express": "^4.21.1"
+    "express": "^4.21.1",
+    "express-session": "^1.19.0"
   }
 }

@@ -1,31 +1,60 @@
 require('dotenv').config();
 const express = require('express');
+const session = require('express-session');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const USER = process.env.AUTH_USER;
 const PASS = process.env.AUTH_PASS;
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
 if (!USER || !PASS) {
     console.error('Missing AUTH_USER or AUTH_PASS in .env');
     process.exit(1);
 }
 
-app.use((req, res, next) => {
-    const header = req.headers.authorization || '';
-    const [scheme, encoded] = header.split(' ');
-
-    if (scheme === 'Basic' && encoded) {
-        const decoded = Buffer.from(encoded, 'base64').toString('utf8');
-        const idx = decoded.indexOf(':');
-        const user = decoded.slice(0, idx);
-        const pass = decoded.slice(idx + 1);
-        if (user === USER && pass === PASS) return next();
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(session({
+    name: 'matix.sid',
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 60 * 8
     }
+}));
 
-    res.set('WWW-Authenticate', 'Basic realm="Matix", charset="UTF-8"');
-    res.status(401).send('Authentication required');
+app.get('/login', (req, res) => {
+    if (req.session.authed) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body || {};
+    if (username === USER && password === PASS) {
+        req.session.authed = true;
+        req.session.user = username;
+        return res.json({ ok: true });
+    }
+    res.status(401).json({ ok: false, error: 'invalid_credentials' });
+});
+
+app.post('/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.clearCookie('matix.sid');
+        res.json({ ok: true });
+    });
+});
+
+app.use((req, res, next) => {
+    if (req.session.authed) return next();
+    const next_ = encodeURIComponent(req.originalUrl);
+    res.redirect(`/login?next=${next_}`);
 });
 
 app.use(express.static(path.join(__dirname)));
