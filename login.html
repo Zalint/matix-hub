@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion · Matix</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🥩%3C/text%3E%3C/svg%3E">
+    <link rel="icon" type="image/jpeg" href="LogoMatix.jpeg">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -87,10 +87,16 @@
         }
 
         .brand-logo {
-            font-size: 52px;
             display: inline-block;
             filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.35));
             margin-bottom: 12px;
+        }
+
+        .brand-logo img {
+            width: 84px;
+            height: 84px;
+            object-fit: contain;
+            display: block;
         }
 
         .brand-title {
@@ -268,7 +274,7 @@
         @media (max-width: 480px) {
             .login-card { padding: 32px 24px; border-radius: 20px; }
             .brand-title { font-size: 26px; }
-            .brand-logo  { font-size: 44px; }
+            .brand-logo img { width: 72px; height: 72px; }
         }
     </style>
 </head>
@@ -276,7 +282,7 @@
     <div class="page">
         <div class="login-card">
             <div class="brand">
-                <div class="brand-logo">🥩</div>
+                <div class="brand-logo"><img src="LogoMatix.jpeg" alt="Matix"></div>
                 <div class="brand-title">Matix</div>
                 <div class="brand-subtitle">Plateforme de gestion</div>
             </div>
