@@ -29,9 +29,18 @@ app.use(session({
     }
 }));
 
+const PUBLIC_PATHS = new Set(['/LogoMatix.jpeg', '/favicon.ico']);
+
 app.get('/login', (req, res) => {
     if (req.session.authed) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.use((req, res, next) => {
+    if (PUBLIC_PATHS.has(req.path)) {
+        return res.sendFile(path.join(__dirname, req.path));
+    }
+    next();
 });
 
 app.post('/login', (req, res) => {
