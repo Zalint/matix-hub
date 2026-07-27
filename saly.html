@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plateforme 360 Matix — accès aux points de vente Keur Balli, O Foire et Keur Massar">
+    <title>Matix · Plateforme 360</title>
+    <link rel="icon" type="image/jpeg" href="LogoMatix.jpeg">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-start: #0f172a;
+            --bg-mid: #1e293b;
+            --bg-end: #334155;
+            --accent: #ef4444;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --card-bg-hover: rgba(255, 255, 255, 0.1);
+        }
+
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text);
+            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-mid) 50%, var(--bg-end) 100%);
+            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Subtle animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(239, 68, 68, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
+            animation: drift 20s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes drift {
+            0%   { transform: translate(0, 0); }
+            100% { transform: translate(-5%, 5%); }
+        }
+
+        .page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 32px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 48px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .logo {
+            display: inline-block;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.3));
+        }
+
+        .logo img {
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+            display: block;
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modules {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .module-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 32px 28px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                        background 0.3s ease,
+                        border-color 0.3s ease,
+                        box-shadow 0.3s ease;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .module-card:nth-child(1) { animation-delay: 0.1s; }
+        .module-card:nth-child(2) { animation-delay: 0.2s; }
+        .module-card:nth-child(3) { animation-delay: 0.3s; }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--card-accent, var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .module-card:hover {
+            transform: translateY(-6px);
+            background: var(--card-bg-hover);
+            border-color: var(--card-accent, var(--accent));
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+        }
+
+        .module-card:hover::before { opacity: 1; }
+
+        .module-card:active { transform: translateY(-2px); }
+
+        .icon-wrap {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--card-accent, var(--accent)) 0%, var(--card-accent-2, #dc2626) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px -4px var(--card-shadow, rgba(239, 68, 68, 0.4));
+        }
+
+        .icon-wrap svg {
+            width: 32px;
+            height: 32px;
+            color: white;
+        }
+
+        .module-name {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .module-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .open-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--card-accent, var(--accent));
+            margin-top: 4px;
+        }
+
+        .open-cta svg {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .module-card:hover .open-cta svg {
+            transform: translateX(4px);
+        }
+
+        /* Per-module accents */
+        .module-keurballi {
+            --card-accent: #f59e0b;
+            --card-accent-2: #d97706;
+            --card-shadow: rgba(245, 158, 11, 0.4);
+        }
+        .module-ofoire {
+            --card-accent: #3b82f6;
+            --card-accent-2: #2563eb;
+            --card-shadow: rgba(59, 130, 246, 0.4);
+        }
+        .module-keurmassar {
+            --card-accent: #22c55e;
+            --card-accent-2: #16a34a;
+            --card-shadow: rgba(34, 197, 94, 0.4);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 48px;
+            color: var(--text-muted);
+            font-size: 13px;
+            animation: fadeIn 1s ease-out 0.5s backwards;
+        }
+
+        footer a {
+            color: var(--text-muted);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--text-muted);
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        footer a:hover { color: var(--text); border-color: var(--text); }
+
+        .hint {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 32px; }
+            .logo { font-size: 44px; }
+            .modules { gap: 16px; }
+            .module-card { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header>
+            <div class="logo"><img src="LogoMatix.jpeg" alt="Matix"></div>
+            <h1>Matix</h1>
+            <p class="subtitle">Plateforme 360</p>
+        </header>
+
+        <main>
+            <div class="modules">
+                <a class="module-card module-keurballi" href="https://keurballi.onrender.com/" target="_blank" rel="noopener noreferrer">
+                    <div class="icon-wrap">
+                        <!-- icon: storefront -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9 4.5 4h15L21 9"/>
+                            <path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>
+                            <path d="M5 11v9h14v-9"/>
+                            <path d="M10 20v-5h4v5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="module-name">Keur Balli</div>
+                        <p class="module-desc">Gestion des ventes et opérations du point de vente Keur Balli.</p>
+                    </div>
+                    <span class="open-cta">
+                        Ouvrir le module
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M13 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a class="module-card module-ofoire" href="https://maas-o-foire.onrender.com/" target="_blank" rel="noopener noreferrer">
+                    <div class="icon-wrap">
+                        <!-- icon: shopping cart -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="9" cy="20" r="1.5"/>
+                            <circle cx="18" cy="20" r="1.5"/>
+                            <path d="M2 3h3l2.4 12.1a2 2 0 0 0 2 1.6h8.3a2 2 0 0 0 2-1.6L22 7H6"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="module-name">MAAS O Foire</div>
+                        <p class="module-desc">Gestion des ventes et opérations du point de vente O Foire.</p>
+                    </div>
+                    <span class="open-cta">
+                        Ouvrir le module
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M13 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a class="module-card module-keurmassar" href="https://maas-keur-massar.onrender.com/" target="_blank" rel="noopener noreferrer">
+                    <div class="icon-wrap">
+                        <!-- icon: map pin -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="module-name">MAAS Keur Massar</div>
+                        <p class="module-desc">Gestion des ventes et opérations du point de vente Keur Massar.</p>
+                    </div>
+                    <span class="open-cta">
+                        Ouvrir le module
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M13 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
+            </div>
+        </main>
+
+        <footer>
+            <div>© <span id="year"></span> Matix · Plateforme 360 interne</div>
+            <div class="hint">Chaque module s'ouvre dans un nouvel onglet — cette page reste accessible à tout moment.</div>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
