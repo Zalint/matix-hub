@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Plateforme 360 Matix — accès aux modules Caisse, Matabanq et Livreur">
+    <meta name="description" content="Plateforme 360 Matix — accès aux modules Caisse, Matabanq, Livreur, Analysis, Tools, Volaille, Keur Balli et MAAS">
     <title>Matix · Plateforme 360</title>
     <link rel="icon" type="image/jpeg" href="LogoMatix.jpeg">
     <style>
@@ -138,6 +138,8 @@
         .module-card:nth-child(4) { animation-delay: 0.4s; }
         .module-card:nth-child(5) { animation-delay: 0.5s; }
         .module-card:nth-child(6) { animation-delay: 0.6s; }
+        .module-card:nth-child(7) { animation-delay: 0.7s; }
+        .module-card:nth-child(8) { animation-delay: 0.8s; }
 
         .module-card::before {
             content: '';
@@ -241,6 +243,68 @@
             --card-accent-2: #0891b2;
             --card-shadow: rgba(6, 182, 212, 0.4);
         }
+        .module-keurballi {
+            --card-accent: #ec4899;
+            --card-accent-2: #db2777;
+            --card-shadow: rgba(236, 72, 153, 0.4);
+        }
+        .module-maas {
+            --card-accent: #14b8a6;
+            --card-accent-2: #0d9488;
+            --card-shadow: rgba(20, 184, 166, 0.4);
+        }
+
+        /* Badge marking a card that opens a sub-menu rather than an app */
+        .badge {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 8px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            background: var(--card-bg-hover);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-bottom: 8px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .logout-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: color 0.2s, border-color 0.2s, background 0.2s;
+        }
+
+        .logout-btn svg { width: 14px; height: 14px; }
+
+        .logout-btn:hover {
+            color: var(--text);
+            border-color: var(--accent);
+            background: var(--card-bg-hover);
+        }
+
+        .logout-btn:disabled { opacity: 0.5; cursor: default; }
 
         footer {
             text-align: center;
@@ -291,6 +355,17 @@
 </head>
 <body>
     <div class="page">
+        <div class="topbar">
+            <button class="logout-btn" id="logout" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <path d="m16 17 5-5-5-5"/>
+                    <path d="M21 12H9"/>
+                </svg>
+                Déconnexion
+            </button>
+        </div>
+
         <header>
             <div class="logo"><img src="LogoMatix.jpeg" alt="Matix"></div>
             <h1>Matix</h1>
@@ -429,17 +504,72 @@
                         </svg>
                     </span>
                 </a>
+
+                <a class="module-card module-keurballi" href="https://keurballi.onrender.com/" target="_blank" rel="noopener noreferrer">
+                    <div class="icon-wrap">
+                        <!-- icon: storefront -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9 4.5 4h15L21 9"/>
+                            <path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>
+                            <path d="M5 11v9h14v-9"/>
+                            <path d="M10 20v-5h4v5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="module-name">Keur Balli</div>
+                        <p class="module-desc">Gestion des ventes et opérations du point de vente Keur Balli.</p>
+                    </div>
+                    <span class="open-cta">
+                        Ouvrir le module
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M13 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a class="module-card module-maas" href="/maas.html">
+                    <div class="icon-wrap">
+                        <!-- icon: grid of points of sale -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/>
+                            <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/>
+                            <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/>
+                            <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="module-name">MAAS <span class="badge">4 points de vente</span></div>
+                        <p class="module-desc">O Foire, Keur Massar, Mbao et Sacré Coeur — regroupés dans un sous-menu.</p>
+                    </div>
+                    <span class="open-cta">
+                        Voir les points de vente
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M13 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
             </div>
         </main>
 
         <footer>
             <div>© <span id="year"></span> Matix · Plateforme 360 interne</div>
-            <div class="hint">Chaque module s'ouvre dans un nouvel onglet — cette page reste accessible à tout moment.</div>
+            <div class="hint">Chaque module s'ouvre dans un nouvel onglet — cette page reste accessible à tout moment. MAAS regroupe les 4 points de vente.</div>
         </footer>
     </div>
 
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
+
+        const logoutBtn = document.getElementById('logout');
+        logoutBtn.addEventListener('click', async () => {
+            logoutBtn.disabled = true;
+            try {
+                await fetch('/logout', { method: 'POST' });
+            } catch (err) {
+                // network down: the redirect below still bounces off the auth gate
+            }
+            location.replace('/login');
+        });
     </script>
 </body>
 </html>

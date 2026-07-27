@@ -15,21 +15,36 @@ if (!USER || !PASS) {
     process.exit(1);
 }
 
-// Each user gets its own static hub page.
+// Each account owns a set of static hub pages; the first one is where it lands.
 const USERS = new Map();
-USERS.set(USER, { pass: PASS, home: 'index.html' });
+USERS.set(USER, { pass: PASS, pages: ['index.html', 'maas.html'] });
 
 if (process.env.SALY_USER && process.env.SALY_PASS) {
-    USERS.set(process.env.SALY_USER, { pass: process.env.SALY_PASS, home: 'saly.html' });
+    USERS.set(process.env.SALY_USER, { pass: process.env.SALY_PASS, pages: ['saly.html'] });
 } else {
     console.warn('SALY_USER / SALY_PASS not set — that account is disabled');
 }
 
-const HUB_PAGES = new Set([...USERS.values()].map(u => '/' + u.home));
+function accountFor(req) {
+    return USERS.get(req.session.user);
+}
 
-function homeFor(req) {
-    const account = USERS.get(req.session.user);
-    return account ? account.home : 'index.html';
+// Windows resolves filenames case-insensitively and ignores trailing separators,
+// dots and spaces, so /MAAS.html, /maas%2ehtml and /maas.html/ all name the same
+// file. Compare on a decoded, normalized name or the ownership check is trivial
+// to slip past.
+function requestedPage(reqPath) {
+    let decoded;
+    try {
+        decoded = decodeURIComponent(reqPath);
+    } catch (err) {
+        return null; // malformed escape
+    }
+    return decoded
+        .replace(/\\/g, '/')
+        .replace(/^\/+/, '')
+        .replace(/[/.\s]+$/, '')
+        .toLowerCase();
 }
 
 const PUBLIC_PATHS = new Set(['/LogoMatix.jpeg', '/favicon.ico']);
@@ -64,7 +79,11 @@ app.get('/login', (req, res) => {
 
 app.use((req, res, next) => {
     if (PUBLIC_PATHS.has(req.path)) {
-        return res.sendFile(path.join(__dirname, req.path));
+        // favicon.ico is listed but not shipped; answer 404 quietly instead of
+        // letting sendFile throw ENOENT into the logs on every request.
+        return res.sendFile(path.join(__dirname, req.path), err => {
+            if (err && !res.headersSent) res.status(404).end();
+        });
     }
     next();
 });
@@ -87,26 +106,32 @@ app.post('/logout', (req, res) => {
     });
 });
 
+// An account removed from .env must not keep a live session running.
 app.use((req, res, next) => {
-    if (req.session.authed) return next();
+    if (req.session.authed && USERS.has(req.session.user)) return next();
     const next_ = encodeURIComponent(req.originalUrl);
     res.redirect(`/login?next=${next_}`);
 });
 
-// Serve the hub page that belongs to the logged-in user, and keep users
-// from opening someone else's hub page directly.
+// Serve the landing page that belongs to the logged-in account.
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, homeFor(req)));
+    res.sendFile(path.join(__dirname, accountFor(req).pages[0]));
 });
 
-app.use((req, res, next) => {
-    if (HUB_PAGES.has(req.path) && req.path !== '/' + homeFor(req)) {
-        return res.redirect('/');
+// There is deliberately no express.static here. Serving the project directory
+// let any path Windows resolves loosely (/MAAS.html, /maas.html/, /maas%2ehtml)
+// reach a hub page around the ownership check, and exposed server.js and
+// package.json besides. The only files that ever leave this process are the
+// account's own pages, login.html and PUBLIC_PATHS — so a new asset has to be
+// added to PUBLIC_PATHS to be reachable.
+app.use((req, res) => {
+    const page = requestedPage(req.path);
+    if (page && accountFor(req).pages.includes(page)) {
+        return res.sendFile(path.join(__dirname, page));
     }
-    next();
+    if (page && page.endsWith('.html')) return res.redirect('/');
+    res.status(404).end();
 });
-
-app.use(express.static(path.join(__dirname), { index: false }));
 
 app.listen(PORT, () => {
     console.log(`Matix hub running on http://localhost:${PORT}`);
