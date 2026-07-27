@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Plateforme 360 Matix — accès aux points de vente Keur Balli, O Foire et Keur Massar">
-    <title>Matix · Plateforme 360</title>
+    <meta name="description" content="MAAS — accès aux points de vente O Foire, Keur Massar, Mbao et Sacré Coeur">
+    <title>MAAS · Matix Plateforme 360</title>
     <link rel="icon" type="image/jpeg" href="LogoMatix.jpeg">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,7 +13,7 @@
             --bg-start: #0f172a;
             --bg-mid: #1e293b;
             --bg-end: #334155;
-            --accent: #ef4444;
+            --accent: #14b8a6;
             --text: #f8fafc;
             --text-muted: #94a3b8;
             --card-bg: rgba(255, 255, 255, 0.05);
@@ -39,7 +39,7 @@
             top: -50%; left: -50%;
             width: 200%; height: 200%;
             background:
-                radial-gradient(circle at 20% 30%, rgba(239, 68, 68, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 20% 30%, rgba(20, 184, 166, 0.08) 0%, transparent 40%),
                 radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
             animation: drift 20s ease-in-out infinite alternate;
             pointer-events: none;
@@ -60,16 +60,83 @@
             padding: 32px 20px;
         }
 
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .logout-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: color 0.2s, border-color 0.2s, background 0.2s;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .logout-btn svg { width: 14px; height: 14px; }
+
+        .logout-btn:hover {
+            color: var(--text);
+            border-color: var(--accent);
+            background: var(--card-bg-hover);
+        }
+
+        .logout-btn:disabled { opacity: 0.5; cursor: default; }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: color 0.2s, border-color 0.2s, background 0.2s, transform 0.2s;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .back-link:hover {
+            color: var(--text);
+            border-color: var(--accent);
+            background: var(--card-bg-hover);
+            transform: translateX(-3px);
+        }
+
+        .back-link svg {
+            width: 14px;
+            height: 14px;
+        }
+
         header {
             text-align: center;
-            margin-bottom: 48px;
+            margin: 24px 0 48px;
             animation: fadeInDown 0.6s ease-out;
         }
 
         .logo {
             display: inline-block;
             margin-bottom: 8px;
-            filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.3));
+            filter: drop-shadow(0 4px 12px rgba(20, 184, 166, 0.3));
         }
 
         .logo img {
@@ -105,9 +172,11 @@
 
         .modules {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            /* 240px keeps the 4 points de vente on one row down to ~1080px wide,
+               instead of orphaning the fourth card on common laptop screens */
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 24px;
-            max-width: 1100px;
+            max-width: 1200px;
             width: 100%;
         }
 
@@ -135,6 +204,7 @@
         .module-card:nth-child(1) { animation-delay: 0.1s; }
         .module-card:nth-child(2) { animation-delay: 0.2s; }
         .module-card:nth-child(3) { animation-delay: 0.3s; }
+        .module-card:nth-child(4) { animation-delay: 0.4s; }
 
         .module-card::before {
             content: '';
@@ -161,11 +231,11 @@
             width: 64px;
             height: 64px;
             border-radius: 16px;
-            background: linear-gradient(135deg, var(--card-accent, var(--accent)) 0%, var(--card-accent-2, #dc2626) 100%);
+            background: linear-gradient(135deg, var(--card-accent, var(--accent)) 0%, var(--card-accent-2, #0d9488) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 8px 16px -4px var(--card-shadow, rgba(239, 68, 68, 0.4));
+            box-shadow: 0 8px 16px -4px var(--card-shadow, rgba(20, 184, 166, 0.4));
         }
 
         .icon-wrap svg {
@@ -207,12 +277,7 @@
             transform: translateX(4px);
         }
 
-        /* Per-module accents */
-        .module-keurballi {
-            --card-accent: #f59e0b;
-            --card-accent-2: #d97706;
-            --card-shadow: rgba(245, 158, 11, 0.4);
-        }
+        /* Per-point-of-sale accents */
         .module-ofoire {
             --card-accent: #3b82f6;
             --card-accent-2: #2563eb;
@@ -223,43 +288,16 @@
             --card-accent-2: #16a34a;
             --card-shadow: rgba(34, 197, 94, 0.4);
         }
-
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-bottom: 8px;
-            animation: fadeIn 0.6s ease-out;
+        .module-mbao {
+            --card-accent: #a855f7;
+            --card-accent-2: #9333ea;
+            --card-shadow: rgba(168, 85, 247, 0.4);
         }
-
-        .logout-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border-radius: 999px;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            color: var(--text-muted);
-            font-family: inherit;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            transition: color 0.2s, border-color 0.2s, background 0.2s;
+        .module-sacrecoeur {
+            --card-accent: #f43f5e;
+            --card-accent-2: #e11d48;
+            --card-shadow: rgba(244, 63, 94, 0.4);
         }
-
-        .logout-btn svg { width: 14px; height: 14px; }
-
-        .logout-btn:hover {
-            color: var(--text);
-            border-color: var(--accent);
-            background: var(--card-bg-hover);
-        }
-
-        .logout-btn:disabled { opacity: 0.5; cursor: default; }
 
         footer {
             text-align: center;
@@ -268,15 +306,6 @@
             font-size: 13px;
             animation: fadeIn 1s ease-out 0.5s backwards;
         }
-
-        footer a {
-            color: var(--text-muted);
-            text-decoration: none;
-            border-bottom: 1px dashed var(--text-muted);
-            transition: color 0.2s, border-color 0.2s;
-        }
-
-        footer a:hover { color: var(--text); border-color: var(--text); }
 
         .hint {
             display: inline-block;
@@ -311,6 +340,13 @@
 <body>
     <div class="page">
         <div class="topbar">
+            <a class="back-link" href="/">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M11 19l-7-7 7-7"/>
+                </svg>
+                Retour au hub
+            </a>
+
             <button class="logout-btn" id="logout" type="button">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -323,34 +359,12 @@
 
         <header>
             <div class="logo"><img src="LogoMatix.jpeg" alt="Matix"></div>
-            <h1>Matix</h1>
-            <p class="subtitle">Plateforme 360</p>
+            <h1>MAAS</h1>
+            <p class="subtitle">Points de vente</p>
         </header>
 
         <main>
             <div class="modules">
-                <a class="module-card module-keurballi" href="https://keurballi.onrender.com/" target="_blank" rel="noopener noreferrer">
-                    <div class="icon-wrap">
-                        <!-- icon: storefront -->
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 9 4.5 4h15L21 9"/>
-                            <path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>
-                            <path d="M5 11v9h14v-9"/>
-                            <path d="M10 20v-5h4v5"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="module-name">Keur Balli</div>
-                        <p class="module-desc">Gestion des ventes et opérations du point de vente Keur Balli.</p>
-                    </div>
-                    <span class="open-cta">
-                        Ouvrir le module
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M5 12h14M13 5l7 7-7 7"/>
-                        </svg>
-                    </span>
-                </a>
-
                 <a class="module-card module-ofoire" href="https://maas-o-foire.onrender.com/" target="_blank" rel="noopener noreferrer">
                     <div class="icon-wrap">
                         <!-- icon: shopping cart -->
@@ -391,12 +405,56 @@
                         </svg>
                     </span>
                 </a>
+
+                <a class="module-card module-mbao" href="https://maas-mbao.onrender.com/" target="_blank" rel="noopener noreferrer">
+                    <div class="icon-wrap">
+                        <!-- icon: storefront -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9 4.5 4h15L21 9"/>
+                            <path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>
+                            <path d="M5 11v9h14v-9"/>
+                            <path d="M10 20v-5h4v5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="module-name">MAAS Mbao</div>
+                        <p class="module-desc">Gestion des ventes et opérations du point de vente Mbao.</p>
+                    </div>
+                    <span class="open-cta">
+                        Ouvrir le module
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M13 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a class="module-card module-sacrecoeur" href="https://maas-sacre-coeur.onrender.com/" target="_blank" rel="noopener noreferrer">
+                    <div class="icon-wrap">
+                        <!-- icon: building / shop front -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 21h18"/>
+                            <path d="M5 21V7l7-4 7 4v14"/>
+                            <path d="M9 21v-6h6v6"/>
+                            <path d="M9 10h.01M15 10h.01"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="module-name">MAAS Sacré Coeur</div>
+                        <p class="module-desc">Gestion des ventes et opérations du point de vente Sacré Coeur.</p>
+                    </div>
+                    <span class="open-cta">
+                        Ouvrir le module
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M13 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
             </div>
         </main>
 
         <footer>
             <div>© <span id="year"></span> Matix · Plateforme 360 interne</div>
-            <div class="hint">Chaque module s'ouvre dans un nouvel onglet — cette page reste accessible à tout moment.</div>
+            <div class="hint">Chaque point de vente s'ouvre dans un nouvel onglet.</div>
         </footer>
     </div>
 
