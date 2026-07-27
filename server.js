@@ -15,6 +15,23 @@ if (!USER || !PASS) {
     process.exit(1);
 }
 
+// Each user gets its own static hub page.
+const USERS = new Map();
+USERS.set(USER, { pass: PASS, home: 'index.html' });
+
+if (process.env.SALY_USER && process.env.SALY_PASS) {
+    USERS.set(process.env.SALY_USER, { pass: process.env.SALY_PASS, home: 'saly.html' });
+} else {
+    console.warn('SALY_USER / SALY_PASS not set — that account is disabled');
+}
+
+const HUB_PAGES = new Set([...USERS.values()].map(u => '/' + u.home));
+
+function homeFor(req) {
+    const account = USERS.get(req.session.user);
+    return account ? account.home : 'index.html';
+}
+
 const PUBLIC_PATHS = new Set(['/LogoMatix.jpeg', '/favicon.ico']);
 
 app.use((req, res, next) => {
@@ -54,7 +71,8 @@ app.use((req, res, next) => {
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body || {};
-    if (username === USER && password === PASS) {
+    const account = USERS.get(username);
+    if (account && password === account.pass) {
         req.session.authed = true;
         req.session.user = username;
         return res.json({ ok: true });
@@ -75,7 +93,20 @@ app.use((req, res, next) => {
     res.redirect(`/login?next=${next_}`);
 });
 
-app.use(express.static(path.join(__dirname)));
+// Serve the hub page that belongs to the logged-in user, and keep users
+// from opening someone else's hub page directly.
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, homeFor(req)));
+});
+
+app.use((req, res, next) => {
+    if (HUB_PAGES.has(req.path) && req.path !== '/' + homeFor(req)) {
+        return res.redirect('/');
+    }
+    next();
+});
+
+app.use(express.static(path.join(__dirname), { index: false }));
 
 app.listen(PORT, () => {
     console.log(`Matix hub running on http://localhost:${PORT}`);
