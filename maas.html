@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MAAS — accès aux points de vente O Foire, Keur Massar, Mbao et Sacré Coeur">
+    <meta name="description" content="MAAS — accès aux points de vente O Foire, Keur Massar, Mbao, Sacré Coeur et Le Djolof">
     <title>MAAS · Matix Plateforme 360</title>
     <link rel="icon" type="image/jpeg" href="LogoMatix.jpeg">
     <style>
@@ -172,9 +172,9 @@
 
         .modules {
             display: grid;
-            /* 240px keeps the 4 points de vente on one row down to ~1080px wide,
-               instead of orphaning the fourth card on common laptop screens */
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            /* 220px keeps the 5 points de vente on one row from ~1240px wide,
+               then degrades to 4+1 and 3+2 rather than stranding one card */
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 24px;
             max-width: 1200px;
             width: 100%;
@@ -205,6 +205,7 @@
         .module-card:nth-child(2) { animation-delay: 0.2s; }
         .module-card:nth-child(3) { animation-delay: 0.3s; }
         .module-card:nth-child(4) { animation-delay: 0.4s; }
+        .module-card:nth-child(5) { animation-delay: 0.5s; }
 
         .module-card::before {
             content: '';
@@ -297,6 +298,11 @@
             --card-accent: #f43f5e;
             --card-accent-2: #e11d48;
             --card-shadow: rgba(244, 63, 94, 0.4);
+        }
+        .module-djolof {
+            --card-accent: #f59e0b;
+            --card-accent-2: #d97706;
+            --card-shadow: rgba(245, 158, 11, 0.4);
         }
 
         footer {
@@ -441,6 +447,27 @@
                     <div>
                         <div class="module-name">MAAS Sacré Coeur</div>
                         <p class="module-desc">Gestion des ventes et opérations du point de vente Sacré Coeur.</p>
+                    </div>
+                    <span class="open-cta">
+                        Ouvrir le module
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M13 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a class="module-card module-djolof" href="https://maas-le-djolof.onrender.com/" target="_blank" rel="noopener noreferrer">
+                    <div class="icon-wrap">
+                        <!-- icon: shopping bag -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                            <path d="M3 6h18"/>
+                            <path d="M16 10a4 4 0 0 1-8 0"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="module-name">MAAS Le Djolof</div>
+                        <p class="module-desc">Gestion des ventes et opérations du point de vente Le Djolof.</p>
                     </div>
                     <span class="open-cta">
                         Ouvrir le module
