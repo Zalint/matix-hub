@@ -2,37 +2,41 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const fs = require('fs');
 const crypto = require('crypto');
+
+const { MODULES } = require('./modules');
+const store = require('./store');
+const { renderHub, renderMaas, hasMaasPage, fill } = require('./render');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const USER = process.env.AUTH_USER;
-const PASS = process.env.AUTH_PASS;
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
-if (!USER || !PASS) {
-    console.error('Missing AUTH_USER or AUTH_PASS in .env');
+// Accounts live in the store now. AUTH_USER / SALY_USER are only used to create
+// them the first time the store is empty, so an existing deployment keeps working.
+const seed = store.seedFromEnv();
+if (seed.seeded) {
+    console.log(`Seeded accounts from .env: ${seed.usernames.join(', ')} -> ${store.USERS_FILE}`);
+} else if (!store.listUsers().length) {
+    console.error('No accounts, and no AUTH_USER / AUTH_PASS in .env to create one');
     process.exit(1);
 }
 
-// Each account owns a set of static hub pages; the first one is where it lands.
-const USERS = new Map();
-USERS.set(USER, { pass: PASS, pages: ['index.html', 'maas.html'] });
+const TEMPLATES = {
+    hub: fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8'),
+    maas: fs.readFileSync(path.join(__dirname, 'maas.html'), 'utf8')
+};
 
-if (process.env.SALY_USER && process.env.SALY_PASS) {
-    USERS.set(process.env.SALY_USER, { pass: process.env.SALY_PASS, pages: ['saly.html'] });
-} else {
-    console.warn('SALY_USER / SALY_PASS not set — that account is disabled');
-}
+const PUBLIC_PATHS = new Set(['/LogoMatix.jpeg', '/favicon.ico']);
 
 function accountFor(req) {
-    return USERS.get(req.session.user);
+    return store.findUser(req.session.user);
 }
 
 // Windows resolves filenames case-insensitively and ignores trailing separators,
 // dots and spaces, so /MAAS.html, /maas%2ehtml and /maas.html/ all name the same
-// file. Compare on a decoded, normalized name or the ownership check is trivial
-// to slip past.
+// page. Normalise before deciding what a request is asking for.
 function requestedPage(reqPath) {
     let decoded;
     try {
@@ -46,8 +50,6 @@ function requestedPage(reqPath) {
         .replace(/[/.\s]+$/, '')
         .toLowerCase();
 }
-
-const PUBLIC_PATHS = new Set(['/LogoMatix.jpeg', '/favicon.ico']);
 
 app.use((req, res, next) => {
     if (req.method === 'GET' && !PUBLIC_PATHS.has(req.path)) {
@@ -90,10 +92,10 @@ app.use((req, res, next) => {
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body || {};
-    const account = USERS.get(username);
-    if (account && password === account.pass) {
+    const account = store.findUser(username);
+    if (account && store.verifyPassword(String(password || ''), account.passwordHash)) {
         req.session.authed = true;
-        req.session.user = username;
+        req.session.user = account.username;
         return res.json({ ok: true });
     }
     res.status(401).json({ ok: false, error: 'invalid_credentials' });
@@ -106,29 +108,130 @@ app.post('/logout', (req, res) => {
     });
 });
 
-// An account removed from .env must not keep a live session running.
+// An account deleted from the store must not keep a live session running.
 app.use((req, res, next) => {
-    if (req.session.authed && USERS.has(req.session.user)) return next();
+    if (req.session.authed && accountFor(req)) return next();
     const next_ = encodeURIComponent(req.originalUrl);
     res.redirect(`/login?next=${next_}`);
 });
 
-// Serve the landing page that belongs to the logged-in account.
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, accountFor(req).pages[0]));
+function requireAdmin(req, res, next) {
+    if (accountFor(req).role === 'admin') return next();
+    if (req.path.startsWith('/api/')) return res.status(403).json({ ok: false, error: 'forbidden' });
+    res.redirect('/');
+}
+
+app.get('/api/me', (req, res) => {
+    const me = accountFor(req);
+    res.json({ username: me.username, role: me.role, modules: me.modules });
 });
 
-// There is deliberately no express.static here. Serving the project directory
-// let any path Windows resolves loosely (/MAAS.html, /maas.html/, /maas%2ehtml)
-// reach a hub page around the ownership check, and exposed server.js and
-// package.json besides. The only files that ever leave this process are the
-// account's own pages, login.html and PUBLIC_PATHS — so a new asset has to be
-// added to PUBLIC_PATHS to be reachable.
+app.get('/api/modules', requireAdmin, (req, res) => {
+    res.json(MODULES.map(({ id, group, name, url }) => ({ id, group, name, url })));
+});
+
+app.get('/api/users', requireAdmin, (req, res) => {
+    res.json(store.listUsers());
+});
+
+const USERNAME_RE = /^[A-Za-z0-9._@-]{2,40}$/;
+
+app.post('/api/users', requireAdmin, (req, res) => {
+    const { username, password, role, modules } = req.body || {};
+    if (!USERNAME_RE.test(String(username || '').trim())) {
+        return res.status(400).json({ ok: false, error: 'invalid_username' });
+    }
+    if (!password || String(password).length < 8) {
+        return res.status(400).json({ ok: false, error: 'weak_password' });
+    }
+    try {
+        const saved = store.saveUser({ username, password, role, modules }, { creating: true });
+        res.json({ ok: true, user: { username: saved.username, role: saved.role, modules: saved.modules } });
+    } catch (err) {
+        res.status(400).json({ ok: false, error: err.message });
+    }
+});
+
+app.put('/api/users/:username', requireAdmin, (req, res) => {
+    const target = store.findUser(req.params.username);
+    if (!target) return res.status(404).json({ ok: false, error: 'unknown_user' });
+
+    const { password, role, modules } = req.body || {};
+    if (password !== undefined && String(password).length < 8) {
+        return res.status(400).json({ ok: false, error: 'weak_password' });
+    }
+    // Never let the last admin drop their own access to this screen.
+    const demoting = role === 'user' && target.role === 'admin';
+    if (demoting && store.countAdmins() <= 1) {
+        return res.status(400).json({ ok: false, error: 'last_admin' });
+    }
+    try {
+        const saved = store.saveUser({ username: target.username, password, role, modules }, { creating: false });
+        res.json({ ok: true, user: { username: saved.username, role: saved.role, modules: saved.modules } });
+    } catch (err) {
+        res.status(400).json({ ok: false, error: err.message });
+    }
+});
+
+app.delete('/api/users/:username', requireAdmin, (req, res) => {
+    const target = store.findUser(req.params.username);
+    if (!target) return res.status(404).json({ ok: false, error: 'unknown_user' });
+    if (target.username.toLowerCase() === accountFor(req).username.toLowerCase()) {
+        return res.status(400).json({ ok: false, error: 'cannot_delete_self' });
+    }
+    if (target.role === 'admin' && store.countAdmins() <= 1) {
+        return res.status(400).json({ ok: false, error: 'last_admin' });
+    }
+    try {
+        store.deleteUser(target.username);
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(400).json({ ok: false, error: err.message });
+    }
+});
+
+app.get(['/admin', '/admin.html'], requireAdmin, (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// Cards are rendered from the account's own module list, so a page can never
+// show a module the account was not granted.
+const ADMIN_LINK = `            <a class="admin-link" href="/admin">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Utilisateurs
+            </a>
+`;
+
+app.get(['/', '/index.html'], (req, res) => {
+    const user = accountFor(req);
+    const view = renderHub(user);
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    res.send(fill(TEMPLATES.hub, {
+        CARDS: view.cards,
+        WIDTH: view.width,
+        HINT: view.hint,
+        ADMINLINK: user.role === 'admin' ? ADMIN_LINK : ''
+    }));
+});
+
+app.get('/maas.html', (req, res) => {
+    const user = accountFor(req);
+    if (!hasMaasPage(user)) return res.redirect('/');
+    const view = renderMaas(user);
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    res.send(fill(TEMPLATES.maas, { CARDS: view.cards, WIDTH: view.width }));
+});
+
+// Nothing else is served. Any other page request lands the account back on its
+// own hub; anything that is not a page is simply not there.
 app.use((req, res) => {
     const page = requestedPage(req.path);
-    if (page && accountFor(req).pages.includes(page)) {
-        return res.sendFile(path.join(__dirname, page));
-    }
+    if (page === 'maas.html') return res.redirect('/');
     if (page && page.endsWith('.html')) return res.redirect('/');
     res.status(404).end();
 });
